@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
-import 'calendar_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'main_navigation.dart';
+import 'models/goal.dart';
+import 'models/calendar_entry.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  
+  // Register adapters
+  Hive.registerAdapter(GoalAdapter());
+  Hive.registerAdapter(CalendarEntryAdapter());
+  
+  // Open boxes
+  await Hive.openBox<Goal>('goals');
+  await Hive.openBox<CalendarEntry>('calendar');
+  
   runApp(const MyApp());
 }
 
@@ -17,7 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData.dark(),
-      home: const CalendarScreen(),
+      home: const MainNavigation(),
     );
   }
 }

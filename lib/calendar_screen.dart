@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? displayedMonth;
@@ -41,6 +42,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Progress'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Profile & Stats',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -165,7 +178,6 @@ class _CalendarView extends StatelessWidget {
         // Next month or future months
         day = i - (leadingEmpty + daysInMonth) + 1;
         // Calculate correct displayMonth and displayYear for overflow
-        int offset = i - (leadingEmpty + daysInMonth);
         int nextMonthNumber = month + 1;
         int nextYear = year;
         while (nextMonthNumber > 12) {
