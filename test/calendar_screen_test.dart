@@ -84,7 +84,7 @@ void main() {
       // Assert displayed month is NOT current
       expect(find.textContaining('${_monthName(now.month)} ${now.year}'), findsNothing);
       // Print widget tree for diagnosis
-      tester.printToConsole('Widget tree after navigation: ' + tester.allWidgets.map((w) => w.runtimeType.toString()).join(','));
+      tester.printToConsole('Widget tree after navigation: ${tester.allWidgets.map((w) => w.runtimeType.toString()).join(',')}');
       // Now the 'Go to Current Month' button should be present
       final goToCurrentMonthIconFinder = find.byIcon(Icons.today);
       expect(goToCurrentMonthIconFinder, findsOneWidget);

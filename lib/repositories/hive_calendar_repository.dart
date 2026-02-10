@@ -18,4 +18,22 @@ class HiveCalendarRepository implements CalendarRepository {
 
   @override
   Future<void> deleteEntry(String id) async => await _box.delete(id);
+
+  @override
+  Future<List<CalendarEntry>> getEntriesByGoal(String goalId) async =>
+      _box.values.where((entry) => entry.goalId == goalId).toList();
+
+  @override
+  Future<CalendarEntry?> getEntryByDate(String goalId, DateTime date) async {
+    try {
+      return _box.values.firstWhere(
+        (entry) => entry.goalId == goalId &&
+                   entry.date.year == date.year &&
+                   entry.date.month == date.month &&
+                   entry.date.day == date.day,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
 }

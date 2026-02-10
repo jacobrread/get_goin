@@ -18,4 +18,7 @@ class HiveGoalRepository implements GoalRepository {
 
   @override
   Future<void> deleteGoal(String id) async => await _box.delete(id);
+
+  @override
+  Future<Goal?> getGoalById(String id) async => _box.get(id);
 }
