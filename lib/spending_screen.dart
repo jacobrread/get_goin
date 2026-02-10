@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/empty_feature.dart';
 
 class SpendingScreen extends StatelessWidget {
   const SpendingScreen({super.key});
@@ -9,24 +10,9 @@ class SpendingScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Spending'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_bag_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Spending feature coming soon',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-        ),
+      body: const EmptyFeature(
+        icon: Icons.shopping_bag_outlined,
+        message: 'Spending feature coming soon',
       ),
     );
   }

@@ -1,22 +1,5 @@
 import 'package:flutter/material.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile & Stats'),
-      ),
-      body: const EmptyFeature(
-        icon: Icons.person_outline,
-        message: 'Profile stats coming soon',
-      ),
-    );
-  }
-}
-
 class EmptyFeature extends StatelessWidget {
   final IconData icon;
   final String message;

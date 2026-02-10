@@ -14,6 +14,102 @@ class GoalsScreen extends StatefulWidget {
   State<GoalsScreen> createState() => _GoalsScreenState();
 }
 
+class GoalsEmptyState extends StatelessWidget {
+  const GoalsEmptyState({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.flag_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No goals yet',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap + to create your first goal',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[500],
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GoalCard extends StatelessWidget {
+  final Goal goal;
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
+  const GoalCard({required this.goal, required this.onDelete, required this.onEdit, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(goal.name.substring(0, 1).toUpperCase()),
+        ),
+        title: Text(goal.name),
+        subtitle: Text(
+          '${goal.target} ${goal.unit} • \$${goal.valuePerUnit.toStringAsFixed(2)} per ${goal.unit}',
+        ),
+        trailing: PopupMenuButton(
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Text('Edit'),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('Delete'),
+            ),
+          ],
+          onSelected: (value) {
+            if (value == 'edit') {
+              onEdit();
+            } else if (value == 'delete') {
+              onDelete();
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+Future<bool?> showDeleteGoalDialog(BuildContext context, String goalName) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Delete Goal'),
+      content: Text('Are you sure you want to delete "$goalName"?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+}
+
 
 class _GoalsScreenState extends State<GoalsScreen> {
   late HiveGoalRepository _repository;
@@ -52,32 +148,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           final goals = snapshot.data ?? [];
 
           if (goals.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.flag_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No goals yet',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap + to create your first goal',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
-                        ),
-                  ),
-                ],
-              ),
-            );
+            return const GoalsEmptyState();
           }
 
           return ListView.builder(
@@ -85,56 +156,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
             itemCount: goals.length,
             itemBuilder: (context, index) {
               final goal = goals[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    child: Text(goal.name.substring(0, 1).toUpperCase()),
-                  ),
-                  title: Text(goal.name),
-                  subtitle: Text(
-                    '${goal.target} ${goal.unit} • \$${goal.valuePerUnit.toStringAsFixed(2)} per ${goal.unit}',
-                  ),
-                  trailing: PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Text('Edit'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete'),
-                      ),
-                    ],
-                    onSelected: (value) async {
-                      if (value == 'delete') {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Goal'),
-                            content: Text(
-                              'Are you sure you want to delete "${goal.name}"?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await _repository.deleteGoal(goal.id);
-                          setState(() {});
-                        }
-                      }
-                    },
-                  ),
-                ),
+              return GoalCard(
+                goal: goal,
+                onEdit: () {
+                  // TODO: Implement edit functionality
+                },
+                onDelete: () async {
+                  final confirm = await showDeleteGoalDialog(context, goal.name);
+                  if (confirm == true) {
+                    await _repository.deleteGoal(goal.id);
+                    setState(() {});
+                  }
+                },
               );
             },
           );

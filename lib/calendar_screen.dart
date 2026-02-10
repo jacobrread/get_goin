@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
+import 'widgets/month_navigation_bar.dart';
+import 'widgets/weekday_header.dart';
+import 'widgets/calendar_cell.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? displayedMonth;
@@ -9,32 +12,27 @@ class CalendarScreen extends StatefulWidget {
   State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStateMixin {
+    DateTime get _currentMonth => DateTime(DateTime.now().year, DateTime.now().month);
   late DateTime _displayedMonth;
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _displayedMonth = widget.displayedMonth ?? DateTime.now();
     _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month);
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _slideAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(_controller);
   }
 
   void _goToPreviousMonth() {
-    setState(() {
-      _displayedMonth = DateTime(
-        _displayedMonth.month == 1 ? _displayedMonth.year - 1 : _displayedMonth.year,
-        _displayedMonth.month == 1 ? 12 : _displayedMonth.month - 1,
-      );
-    });
+    _startSlideAnimation(1);
   }
 
   void _goToNextMonth() {
-    setState(() {
-      _displayedMonth = DateTime(
-        _displayedMonth.month == 12 ? _displayedMonth.year + 1 : _displayedMonth.year,
-        _displayedMonth.month == 12 ? 1 : _displayedMonth.month + 1,
-      );
-    });
+    _startSlideAnimation(-1);
   }
 
   @override
@@ -55,34 +53,80 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _StatsBar(),
-          // Month navigation and calendar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_left),
-                  onPressed: _goToPreviousMonth,
-                ),
-                Text(
-                  '${_monthName(_displayedMonth.month)} ${_displayedMonth.year}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_right),
-                  onPressed: _goToNextMonth,
-                ),
-              ],
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity != null) {
+            if (details.primaryVelocity! < 0) {
+              // Swipe left to go to next month
+              _goToNextMonth();
+            } else if (details.primaryVelocity! > 0) {
+              // Swipe right to go to previous month
+              _goToPreviousMonth();
+            }
+          }
+        },
+        child: Column(
+          children: [
+            StatsBar(),
+            // Month navigation and calendar
+            MonthNavigationBar(
+              monthName: _monthName(_displayedMonth.month),
+              year: _displayedMonth.year,
+              onPrevious: _goToPreviousMonth,
+              onNext: _goToNextMonth,
             ),
-          ),
-          Expanded(child: _CalendarView(displayedMonth: _displayedMonth)),
-        ],
+            Expanded(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FractionalTranslation(
+                    translation: _slideAnimation.value,
+                    child: child,
+                  );
+                },
+                child: CalendarView(
+                  key: ValueKey('${_displayedMonth.year}-${_displayedMonth.month}'),
+                  displayedMonth: _displayedMonth,
+                ),
+              ),
+            ),
+            if (_displayedMonth.year != _currentMonth.year || _displayedMonth.month != _currentMonth.month)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24.0),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.today),
+                  label: const Text('Go to Current Month'),
+                  onPressed: _goToCurrentMonth,
+                ),
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _startSlideAnimation(int direction) {
+    if (_controller.isAnimating) return;
+    setState(() {
+      if (direction == -1) {
+        // Slide left (next month)
+        _slideAnimation = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(_controller);
+        _displayedMonth = DateTime(
+          _displayedMonth.month == 12 ? _displayedMonth.year + 1 : _displayedMonth.year,
+          _displayedMonth.month == 12 ? 1 : _displayedMonth.month + 1,
+        );
+      } else {
+        // Slide right (previous month)
+        _slideAnimation = Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero).animate(_controller);
+        _displayedMonth = DateTime(
+          _displayedMonth.month == 1 ? _displayedMonth.year - 1 : _displayedMonth.year,
+          _displayedMonth.month == 1 ? 12 : _displayedMonth.month - 1,
+        );
+      }
+    });
+    _controller.forward(from: 0).then((_) {
+      setState(() {});
+    });
   }
 
   String _monthName(int month) {
@@ -93,30 +137,56 @@ class _CalendarScreenState extends State<CalendarScreen> {
     ];
     return months[month];
   }
+
+  void _goToCurrentMonth() {
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+    int direction;
+    if (_displayedMonth.isBefore(currentMonth)) {
+      direction = -1; // Slide left to future
+    } else {
+      direction = 1; // Slide right to past
+    }
+    setState(() {
+      _slideAnimation = Tween<Offset>(
+        begin: direction == -1 ? const Offset(1, 0) : const Offset(-1, 0),
+        end: Offset.zero,
+      ).animate(_controller);
+      _displayedMonth = currentMonth;
+    });
+    _controller.forward(from: 0).then((_) {
+      setState(() {});
+    });
+  }
 }
 
-class _StatsBar extends StatelessWidget {
+
+// ...existing code...
+
+// StatsBar widget (previously _StatsBar)
+class StatsBar extends StatelessWidget {
+  const StatsBar({super.key});
+
   @override
   Widget build(BuildContext context) {
-    // Placeholder for stats
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.blueGrey,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: const [
-          _StatItem(label: 'Streak', value: '0'),
-          _StatItem(label: 'Total Cash', value: '\$240.00'),
+          StatItem(label: 'Streak', value: '0'),
+          StatItem(label: 'Total Cash', value: '\$240.00'),
         ],
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
+class StatItem extends StatelessWidget {
   final String label;
   final String value;
-  const _StatItem({required this.label, required this.value});
+  const StatItem({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -129,23 +199,21 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _CalendarView extends StatelessWidget {
+// CalendarView widget (previously _CalendarView)
+class CalendarView extends StatelessWidget {
   final DateTime? displayedMonth;
-  const _CalendarView({this.displayedMonth});
+  const CalendarView({super.key, this.displayedMonth});
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final year = displayedMonth?.year ?? now.year;
     final month = displayedMonth?.month ?? now.month;
-    // If displayedMonth is the current month, use today's day, else -1
     final isCurrentMonth = (displayedMonth?.year == now.year && displayedMonth?.month == now.month) || (displayedMonth == null);
     final today = isCurrentMonth ? now.day : -1;
     final firstDayOfMonth = DateTime(year, month, 1);
     final daysInMonth = DateTime(year, month + 1, 0).day;
-    // Use Sunday as the first day of the week (column 0)
-    final firstWeekday = firstDayOfMonth.weekday; // 1 (Mon) - 7 (Sun)
-    // For Sunday, leadingEmpty should be 0; for Monday, 1; ... Saturday, 6
+    final firstWeekday = firstDayOfMonth.weekday;
     final leadingEmpty = firstWeekday % 7;
     final prevMonth = month == 1 ? 12 : month - 1;
     final prevMonthYear = month == 1 ? year - 1 : year;
@@ -154,10 +222,6 @@ class _CalendarView extends StatelessWidget {
     final rows = ((totalCells) / 7).ceil();
     final itemCount = rows * 7;
 
-    // Weekday abbreviations, Sunday first
-    const weekdayAbbr = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    // Build a list of all cells to guarantee all days are present
     List<Widget> cells = [];
     for (int i = 0; i < itemCount; i++) {
       int day;
@@ -165,19 +229,15 @@ class _CalendarView extends StatelessWidget {
       int displayYear = year;
       double opacity = 1.0;
       Color cellColor;
-
       bool isCurrentDay = false;
       if (i < leadingEmpty) {
-        // Previous month
         day = prevMonthDays - (leadingEmpty - i - 1);
         displayMonth = prevMonth;
         displayYear = prevMonthYear;
         opacity = 0.4;
         cellColor = Colors.grey;
       } else if (i >= leadingEmpty + daysInMonth) {
-        // Next month or future months
         day = i - (leadingEmpty + daysInMonth) + 1;
-        // Calculate correct displayMonth and displayYear for overflow
         int nextMonthNumber = month + 1;
         int nextYear = year;
         while (nextMonthNumber > 12) {
@@ -190,48 +250,31 @@ class _CalendarView extends StatelessWidget {
         final displayed = DateTime(displayYear, displayMonth);
         final realNow = DateTime(now.year, now.month);
         if (displayed.isAfter(realNow)) {
-          cellColor = const Color(0xFFBFC9D9); // Neutral gray with a hint of blue
+          cellColor = const Color(0xFFBFC9D9);
         } else {
           cellColor = Colors.grey;
         }
       } else {
-        // Current month
         day = i - leadingEmpty + 1;
         if (today != -1 && day > today) {
-          cellColor = const Color(0xFFBFC9D9); // Neutral gray with a hint of blue
+          cellColor = const Color(0xFFBFC9D9);
         } else {
-          cellColor = Colors.green.shade200; // Green for past and present days
+          cellColor = Colors.green.shade200;
         }
-        // Highlight current day
         if (today != -1 && day == today) {
           isCurrentDay = true;
         }
       }
-
       final cellKey = ValueKey('calendar-cell-$displayYear-$displayMonth-$day');
-      // ignore: avoid_print
-      print('Rendering cell: $cellKey');
       cells.add(
-        Opacity(
+        CalendarCell(
+          key: cellKey,
+          day: day,
+          displayMonth: displayMonth,
+          displayYear: displayYear,
           opacity: opacity,
-          child: Container(
-            key: cellKey,
-            decoration: BoxDecoration(
-              color: cellColor,
-              borderRadius: BorderRadius.circular(8),
-              border: isCurrentDay ? Border.all(color: Colors.blue, width: 3) : null,
-            ),
-            child: Center(
-              child: Text(
-                '$day',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: isCurrentDay ? FontWeight.bold : FontWeight.w500,
-                  color: isCurrentDay ? Colors.blue.shade900 : null,
-                ),
-              ),
-            ),
-          ),
+          cellColor: cellColor,
+          isCurrentDay: isCurrentDay,
         ),
       );
     }
@@ -240,20 +283,8 @@ class _CalendarView extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: weekdayAbbr
-                .map((abbr) => Expanded(
-                      child: Center(
-                        child: Text(
-                          abbr,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 8),
+          WeekdayHeader(),
+          SizedBox(height: 8),
           Expanded(
             child: GridView.count(
               crossAxisCount: 7,

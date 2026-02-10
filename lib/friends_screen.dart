@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/empty_feature.dart';
 
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
@@ -9,24 +10,9 @@ class FriendsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Friends'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Friends feature coming soon',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-        ),
+      body: const EmptyFeature(
+        icon: Icons.people_outline,
+        message: 'Friends feature coming soon',
       ),
     );
   }
