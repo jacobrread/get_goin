@@ -18,6 +18,8 @@ class Goal {
   final DateTime startDate;
   @HiveField(6)
   final DateTime endDate;
+  @HiveField(7)
+  final double penaltyAmount;
 
   Goal({
     required this.id,
@@ -27,5 +29,6 @@ class Goal {
     required this.valuePerUnit,
     required this.startDate,
     required this.endDate,
+    required this.penaltyAmount,
   });
 }

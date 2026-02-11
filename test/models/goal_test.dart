@@ -15,6 +15,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: startDate,
         endDate: endDate,
+        penaltyAmount: 1.0,
       );
 
       expect(goal.id, '1');
@@ -24,6 +25,7 @@ void main() {
       expect(goal.valuePerUnit, 1.0);
       expect(goal.startDate, startDate);
       expect(goal.endDate, endDate);
+      expect(goal.penaltyAmount, 1.0);
     });
 
     test('handles fractional valuePerUnit', () {
@@ -35,6 +37,7 @@ void main() {
         valuePerUnit: 0.5,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 1, 31),
+        penaltyAmount: 0.5,
       );
 
       expect(goal.valuePerUnit, 0.5);

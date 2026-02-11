@@ -64,6 +64,7 @@ void main() {
           valuePerUnit: 5.0,
           startDate: DateTime(2024, 1, 1),
           endDate: DateTime(2024, 12, 31),
+          penaltyAmount: 5.0,
         ),
         Goal(
           id: '2',
@@ -73,6 +74,7 @@ void main() {
           valuePerUnit: 2.0,
           startDate: DateTime(2024, 2, 1),
           endDate: DateTime(2024, 12, 31),
+          penaltyAmount: 2.0,
         ),
       ];
       when(mockRepository.getGoals()).thenAnswer((_) async => goals);

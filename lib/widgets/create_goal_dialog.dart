@@ -17,6 +17,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   final _targetController = TextEditingController();
   final _unitController = TextEditingController();
   final _valueController = TextEditingController();
+  final _penaltyController = TextEditingController();
   
   String _duration = '1 week';
   final List<String> _durations = ['1 week', '2 weeks', '1 month', '2 months'];
@@ -27,6 +28,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
     _targetController.dispose();
     _unitController.dispose();
     _valueController.dispose();
+    _penaltyController.dispose();
     super.dispose();
   }
 
@@ -56,6 +58,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         valuePerUnit: double.parse(_valueController.text),
         startDate: DateTime.now(),
         endDate: _calculateEndDate(_duration),
+        penaltyAmount: double.parse(_penaltyController.text),
       );
       widget.onSave(goal);
       Navigator.pop(context);
@@ -135,6 +138,28 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                     return 'Please enter a value';
                   }
                   if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                    return 'Please enter a valid amount';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _penaltyController,
+                decoration: const InputDecoration(
+                  labelText: 'Penalty Amount (\$)',
+                  hintText: 'e.g., 10.00',
+                  prefixText: '\$',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a penalty amount';
+                  }
+                  if (double.tryParse(value) == null || double.parse(value) < 0) {
                     return 'Please enter a valid amount';
                   }
                   return null;

@@ -24,13 +24,14 @@ class GoalAdapter extends TypeAdapter<Goal> {
       valuePerUnit: fields[4] as double,
       startDate: fields[5] as DateTime,
       endDate: fields[6] as DateTime,
+      penaltyAmount: fields[7] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, Goal obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class GoalAdapter extends TypeAdapter<Goal> {
       ..writeByte(5)
       ..write(obj.startDate)
       ..writeByte(6)
-      ..write(obj.endDate);
+      ..write(obj.endDate)
+      ..writeByte(7)
+      ..write(obj.penaltyAmount);
   }
 
   @override

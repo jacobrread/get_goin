@@ -8,6 +8,9 @@ For app features, requirements, and design, see [app_design.md](app_design.md).
 - Use the `test` package for Dart unit testing.
 - Aim for high code coverage, especially for core logic.
 - Write widget tests for UI components in the `test/` directory.
+- Do NOT use reflection (e.g., `dart:mirrors` or reflectable packages) in unit tests.
+  - Tests should be explicit and directly instantiate or mock dependencies.
+  - Avoid mirror-based introspection or dynamic invocation in test code.
 
 ## Code Structure & Principles
 - Follow Object-Oriented Programming (OOP) principles:

@@ -40,6 +40,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 1.0,
       );
 
       await repository.addGoal(goal);
@@ -57,6 +58,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 1.0,
       );
 
       final goal2 = Goal(
@@ -67,6 +69,7 @@ void main() {
         valuePerUnit: 0.5,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 0.5,
       );
 
       await repository.addGoal(goal1);
@@ -88,6 +91,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 1.0,
       );
 
       await repository.addGoal(goal);
@@ -100,6 +104,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 1.0,
       );
 
       await repository.updateGoal(updatedGoal);
@@ -118,6 +123,7 @@ void main() {
         valuePerUnit: 1.0,
         startDate: DateTime(2026, 1, 1),
         endDate: DateTime(2026, 12, 31),
+        penaltyAmount: 1.0,
       );
 
       await repository.addGoal(goal);

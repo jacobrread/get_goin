@@ -32,6 +32,7 @@ void main() {
     expect(find.text('Daily Target'), findsOneWidget);
     expect(find.text('Unit'), findsOneWidget);
     expect(find.text('Value per Unit (\$)'), findsOneWidget);
+    expect(find.text('Penalty Amount (\$)'), findsOneWidget);
     expect(find.text('Duration'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Create'), findsOneWidget);
@@ -122,6 +123,22 @@ void main() {
     expect(find.text('Please enter a valid amount'), findsOneWidget);
   });
 
+  testWidgets('validates penalty amount is required', (WidgetTester tester) async {
+    await tester.pumpWidget(createDialogWrapper(onSave: (_) {}));
+    await tester.tap(find.text('Show Dialog'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextFormField, 'Goal Name'), 'Push-ups');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Daily Target'), '50');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Unit'), 'reps');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Value per Unit (\$)'), '0.10');
+
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Please enter a penalty amount'), findsOneWidget);
+  });
+
   testWidgets('creates goal with valid data', (WidgetTester tester) async {
     Goal? savedGoal;
 
@@ -138,6 +155,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Daily Target'), '50');
     await tester.enterText(find.widgetWithText(TextFormField, 'Unit'), 'reps');
     await tester.enterText(find.widgetWithText(TextFormField, 'Value per Unit (\$)'), '0.10');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Penalty Amount (\$)'), '10.00');
 
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
@@ -148,6 +166,7 @@ void main() {
     expect(savedGoal!.target, 50);
     expect(savedGoal!.unit, 'reps');
     expect(savedGoal!.valuePerUnit, 0.10);
+    expect(savedGoal!.penaltyAmount, 10.00);
   });
 
   testWidgets('cancels goal creation', (WidgetTester tester) async {
@@ -184,15 +203,21 @@ void main() {
     await tester.tap(find.text('Show Dialog'));
     await tester.pumpAndSettle();
 
-    // Tap the dropdown
-    await tester.tap(find.text('1 week'));
+    // Scroll to make the dropdown visible
+    await tester.ensureVisible(find.text('Duration'));
     await tester.pumpAndSettle();
 
-    // Select a different duration
+    // Tap the dropdown icon to open the menu
+    await tester.tap(find.byIcon(Icons.arrow_drop_down).last);
+    await tester.pumpAndSettle();
+
+    // Select a different duration from the opened menu
     await tester.tap(find.text('1 month').last);
     await tester.pumpAndSettle();
 
+    // Verify the selection changed
     expect(find.text('1 month'), findsOneWidget);
+    expect(find.text('1 week'), findsNothing);
   });
 
   testWidgets('goal has correct end date for 1 week duration', (WidgetTester tester) async {
@@ -211,6 +236,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Daily Target'), '10');
     await tester.enterText(find.widgetWithText(TextFormField, 'Unit'), 'reps');
     await tester.enterText(find.widgetWithText(TextFormField, 'Value per Unit (\$)'), '0.10');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Penalty Amount (\$)'), '5.00');
 
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
@@ -235,11 +261,13 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Daily Target'), '5');
     await tester.enterText(find.widgetWithText(TextFormField, 'Unit'), 'km');
     await tester.enterText(find.widgetWithText(TextFormField, 'Value per Unit (\$)'), '2.50');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Penalty Amount (\$)'), '15.75');
 
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
 
     expect(savedGoal, isNotNull);
     expect(savedGoal!.valuePerUnit, 2.50);
+    expect(savedGoal!.penaltyAmount, 15.75);
   });
 }
