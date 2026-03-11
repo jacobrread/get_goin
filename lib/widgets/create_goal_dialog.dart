@@ -4,8 +4,10 @@ import '../models/goal.dart';
 
 class CreateGoalDialog extends StatefulWidget {
   final Function(Goal) onSave;
+  final Goal? existingGoal;
+  final Function(Goal)? onEdit;
 
-  const CreateGoalDialog({super.key, required this.onSave});
+  const CreateGoalDialog({super.key, required this.onSave, this.existingGoal, this.onEdit});
 
   @override
   State<CreateGoalDialog> createState() => _CreateGoalDialogState();
@@ -18,9 +20,37 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   final _unitController = TextEditingController();
   final _valueController = TextEditingController();
   final _penaltyController = TextEditingController();
-  
+
   String _duration = '1 week';
   final List<String> _durations = ['1 week', '2 weeks', '1 month', '2 months'];
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingGoal != null) {
+      final g = widget.existingGoal!;
+      _nameController.text = g.name;
+      _targetController.text = g.target.toString();
+      _unitController.text = g.unit;
+      _valueController.text = g.valuePerUnit.toString();
+      _penaltyController.text = g.penaltyAmount.toString();
+      _startDate = g.startDate;
+      _endDate = g.endDate;
+      // Guess duration string from dates (approximate)
+      final diff = g.endDate.difference(g.startDate).inDays;
+      if (diff <= 7) {
+        _duration = '1 week';
+      } else if (diff <= 14) {
+        _duration = '2 weeks';
+      } else if (diff <= 31) {
+        _duration = '1 month';
+      } else {
+        _duration = '2 months';
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -50,17 +80,22 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
 
   void _save() {
     if (_formKey.currentState!.validate()) {
+      final isEdit = widget.existingGoal != null;
       final goal = Goal(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: isEdit ? widget.existingGoal!.id : DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text,
         target: int.parse(_targetController.text),
         unit: _unitController.text,
         valuePerUnit: double.parse(_valueController.text),
-        startDate: DateTime.now(),
-        endDate: _calculateEndDate(_duration),
+        startDate: isEdit ? _startDate! : DateTime.now(),
+        endDate: isEdit ? _endDate! : _calculateEndDate(_duration),
         penaltyAmount: double.parse(_penaltyController.text),
       );
-      widget.onSave(goal);
+      if (isEdit && widget.onEdit != null) {
+        widget.onEdit!(goal);
+      } else {
+        widget.onSave(goal);
+      }
       Navigator.pop(context);
     }
   }
@@ -68,7 +103,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create Goal'),
+      title: Text(widget.existingGoal != null ? 'Edit Goal' : 'Create Goal'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -177,11 +212,13 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                     child: Text(duration),
                   );
                 }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _duration = value!;
-                  });
-                },
+                onChanged: widget.existingGoal != null
+                    ? null // Disable changing duration for edit
+                    : (value) {
+                        setState(() {
+                          _duration = value!;
+                        });
+                      },
               ),
             ],
           ),
@@ -194,7 +231,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         ),
         ElevatedButton(
           onPressed: _save,
-          child: const Text('Create'),
+          child: Text(widget.existingGoal != null ? 'Save' : 'Create'),
         ),
       ],
     );

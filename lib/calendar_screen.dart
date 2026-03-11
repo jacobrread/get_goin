@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_goin/models/calendar_entry.dart';
+import 'package:get_goin/models/goal.dart';
+import 'package:provider/provider.dart';
+import 'package:hive/hive.dart';
 import 'profile_screen.dart';
 import 'widgets/month_navigation_bar.dart';
 import 'widgets/weekday_header.dart';
 import 'widgets/calendar_cell.dart';
+import 'widgets/update_progress_button.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? displayedMonth;
@@ -57,10 +62,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity != null) {
             if (details.primaryVelocity! < 0) {
-              // Swipe left to go to next month
               _goToNextMonth();
             } else if (details.primaryVelocity! > 0) {
-              // Swipe right to go to previous month
               _goToPreviousMonth();
             }
           }
@@ -68,7 +71,6 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
         child: Column(
           children: [
             StatsBar(),
-            // Month navigation and calendar
             MonthNavigationBar(
               monthName: _monthName(_displayedMonth.month),
               year: _displayedMonth.year,
@@ -90,6 +92,18 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                 ),
               ),
             ),
+            if (_displayedMonth.year == _currentMonth.year && _displayedMonth.month == _currentMonth.month)
+              Provider<Box<Goal>>.value(
+                value: Hive.box<Goal>('goals'),
+                child: Provider<Box<CalendarEntry>>.value(
+                  value: Hive.box<CalendarEntry>('calendar'),
+                  child: UpdateProgressButton(
+                    onProgressUpdated: () {
+                      setState(() {});
+                    },
+                  ),
+                ),
+              ),
             if (_displayedMonth.year != _currentMonth.year || _displayedMonth.month != _currentMonth.month)
               Padding(
                 padding: const EdgeInsets.only(bottom: 24.0),
@@ -159,9 +173,6 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
     });
   }
 }
-
-
-// ...existing code...
 
 // StatsBar widget (previously _StatsBar)
 class StatsBar extends StatelessWidget {

@@ -132,6 +132,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
+  void _showEditGoalDialog(Goal goal) {
+    showDialog(
+      context: context,
+      builder: (context) => CreateGoalDialog(
+        existingGoal: goal,
+        onSave: (_) {}, // Not used in edit mode
+        onEdit: (editedGoal) async {
+          await _repository.updateGoal(editedGoal);
+          setState(() {});
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,7 +173,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               return GoalCard(
                 goal: goal,
                 onEdit: () {
-                  // TODO: Implement edit functionality
+                  _showEditGoalDialog(goal);
                 },
                 onDelete: () async {
                   final confirm = await showDeleteGoalDialog(context, goal.name);

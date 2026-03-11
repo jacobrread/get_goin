@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_goin/calendar_screen.dart';
 import 'package:get_goin/widgets/month_navigation_bar.dart';
+import 'package:get_goin/widgets/update_progress_button.dart';
 
 String _monthName(int month) {
   const months = [
@@ -116,6 +117,22 @@ void main() {
       tester.printToConsole('Displayed month after swipe right: $monthTextAfterRight');
       expect(monthTextAfterRight, equals('January 2026'));
       expect(find.byIcon(Icons.today), findsOneWidget);
+    });
+
+    testWidgets('renders calendar and update progress button for current month', (WidgetTester tester) async {
+      await tester.pumpWidget(const MaterialApp(
+        home: CalendarScreen(),
+      ));
+      expect(find.byType(CalendarScreen), findsOneWidget);
+      expect(find.byType(UpdateProgressButton), findsOneWidget);
+    });
+
+    testWidgets('hides update progress button for non-current month', (WidgetTester tester) async {
+      final displayedMonth = DateTime(DateTime.now().year, DateTime.now().month - 1);
+      await tester.pumpWidget(MaterialApp(
+        home: CalendarScreen(displayedMonth: displayedMonth),
+      ));
+      expect(find.byType(UpdateProgressButton), findsNothing);
     });
   });
 }
